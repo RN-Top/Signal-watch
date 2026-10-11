@@ -37,6 +37,7 @@ class Indicator:
     url: str
     direction: int = 1  # for conditions: +1 if a rise means more change, -1 if a fall does
     note: str = ""
+    rolling12: bool = False  # analyze as a trailing 12-month total (removes seasonal and dating artifacts)
 
 
 GROUPS = {
@@ -60,7 +61,10 @@ def _fred(series: str) -> str:
 INDICATORS: list[Indicator] = [
     Indicator("openalex_ai", "AI research papers per month", "capability", "adoption", "OpenAlex",
               "https://openalex.org/C154945302",
-              note="Works tagged Artificial intelligence. The latest 4 months are left out because indexing lags."),
+              note="Works tagged Artificial intelligence, as a trailing 12-month total, because many papers carry "
+                   "only a publication year and get filed under January. The latest 9 months are left out "
+                   "while OpenAlex is still indexing them.",
+              rolling12=True),
     Indicator("wiki_llm", "Interest in large language models", "capability", "adoption", "Wikipedia pageviews",
               _wiki("Large_language_model")),
     Indicator("wiki_ai", "Interest in artificial intelligence", "attention", "adoption", "Wikipedia pageviews",
@@ -173,7 +177,7 @@ def fetch_fred(series: str) -> list[tuple[date, float]]:
 def fetch_openalex(concept: str) -> list[tuple[date, float]]:
     """Monthly count of works tagged with an OpenAlex concept."""
     end = _last_complete_month()
-    months = _months(START, end)[:-4]  # recent months are still being indexed
+    months = _months(START, end)[:-9]  # recent months are still being indexed
     rows = []
     for m in months:
         resp = requests.get(

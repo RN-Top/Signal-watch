@@ -1,6 +1,2 @@
-date,scenario,probability
-2026-10-11,power_concentration,0.6931
-2026-10-11,scientific_acceleration,0.5952
-2026-10-11,governance_order,0.4185
-2026-10-11,labor_transformation,0.4116
-2026-10-11,backlash_slowdown,0.1352
+date,tipping_median,tipping_p10,tipping_p90,acceleration_index,leading_group
+2026-10-11,2023.1,2020.66,2023.84,50.0,attention
