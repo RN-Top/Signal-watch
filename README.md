@@ -1,90 +1,52 @@
 # SIGNAL//WATCH
 
-A predictive model for a big AI-driven societal shift, with 2027 as the horizon.
+A truth-seeking test of a hunch: that a big shift tied to AI is coming, and that it starts around 2027.
 
-The premise: something large is starting to move, and AI is at the center of it. Signal Watch does not try to say *whether* a shift happens. It tracks several competing **outcome scenarios** for *what the shift turns into*, runs a Monte Carlo ensemble over them every week, and shows the result on a live dashboard.
+Signal Watch doesn't assume the hunch is right. It reads real public data, works out from the data **what** is changing and **when** each change starts, and reports whether the evidence supports the year you pick. If the data say "already happened", "later" or "nothing unusual right now", that's what it shows. It also tests itself on trends that have already played out, and widens its uncertainty if its past calls were overconfident.
 
-## Dashboard
+## What it measures
 
-`docs/index.html` is the dashboard. It's served by GitHub Pages and reads `docs/forecast.json`. It shows:
+Sixteen monthly series from sources that need no API key, cached in `data/series/` so every number can be checked. A series with less than three years of data is skipped until it has enough history.
 
-- **Shift Proximity Index**: overall signal intensity from 0 to 100, with its uncertainty band
-- **Scenario cards**: likelihood by the horizon, P10 to P90 range, tipping-point quarter and top drivers
-- **Trajectory to 2028**: quarter-by-quarter cumulative likelihood with uncertainty bands
-- **Signal array**: a radar of every leading indicator and its uncertainty
-- **Countdown to 2027**
-
-To turn it on: go to **Settings → Pages**, choose "Deploy from a branch", set the branch to `main` and the folder to `/docs`.
-
-### Streamlit app
-
-`app.py` is a Streamlit app that runs the forecast live and shows the same dashboard, with sliders for every signal so you can explore "what if" readings.
-
-```bash
-streamlit run app.py
-```
-
-On Streamlit Community Cloud, point the app at this repo, branch `main`, main file `app.py`.
-
-## Scenarios
-
-| Scenario | What it means |
+| Outcome | Indicators |
 |---|---|
-| Labor and income transformation | AI automates much of knowledge work and forces new income systems (national UBI, AI dividends, shorter work weeks). |
-| New AI governance order | Binding international AI rules, frontier-model licensing, or a new global AI institution. |
-| Concentration of power | A few AI labs and states pull far ahead and become the new center of economic and geopolitical power. |
-| Scientific and economic acceleration | AI-driven discovery in science, medicine and energy sharply accelerates growth. |
-| Backlash and slowdown | Public backlash, incidents or an investment pullback push the shift past 2027. |
+| Capability and research acceleration | AI research papers (OpenAlex), interest in large language models |
+| Mass adoption and public attention | Interest in AI, ChatGPT, and artificial general intelligence |
+| Labor and income transformation | US unemployment, information-sector jobs, labor productivity (FRED); interest in universal basic income and technological unemployment |
+| New governance order | Interest in AI regulation and the EU AI Act |
+| Compute build-out and concentration | US semiconductor production (FRED), interest in Nvidia |
+| Risk concern and backlash | Interest in AI safety and existential risk from AI |
 
-## Signals
+"Interest" means English Wikipedia pageviews. They measure attention, not change in the world. The FRED series measure real economic conditions but move slowly.
 
-Each signal is a leading indicator scaled from 0.0 (quiet) to 1.0 (extreme), with an uncertainty spread:
+## How it works
 
-- AI research velocity (fetched live from arXiv: AI papers in the last 30 days vs. a year earlier)
-- Frontier capability jumps
-- Compute and data-center investment
-- AI-driven labor displacement
-- AI legislation and regulation
-- Concentration of AI power
-- Public concern about AI
+1. **Momentum.** For each series, the last 12 months of change is compared with the series' own history as a z-score. A z of +2 or more counts as a breakout. Each outcome's momentum is the average of its indicators.
+2. **Timing.** For adoption-type series, the model fits an S-curve (logistic) and reads off two dates. The shift *starts* when the curve has covered 10% of its rise, and it is *halfway* at the point of fastest change. A block bootstrap (200 refits on resampled residuals) turns each date into a range. If a curve is still in its early, accelerating phase, the model reports that its timing can't be pinned down yet instead of guessing.
+3. **Backtest and calibration.** For every trend whose turning point is now clearly in the past, the model refits using only the data available 1, 2 and 3 years earlier and checks those calls against what happened. If its 80% ranges caught the answer less than 80% of the time, every range is widened to match.
+4. **Gut check.** The calibrated start dates are pooled across indicators and compared with your year. The verdict is Supported, Plausible, Not supported, Too early to call, or No shift detected. It also says whether anything is breaking out right now, which is how a new wave would first show up.
 
-Signals without a live source yet use a baseline value that you can override.
-
-## How the model works
-
-1. **Monte Carlo ensemble.** Each run draws 20,000 possible worlds. In each one, the signal readings are sampled from Beta distributions around their current values, and every model weight is jittered by its own uncertainty.
-2. **Signal scoring.** Each scenario starts from a prior probability. Each signal it depends on moves its log-odds by `weight × (signal − 0.5) × sensitivity`.
-3. **Cross-impact analysis.** Scenarios aren't independent. A cross-impact matrix, a standard method from futures studies, lets each scenario reinforce or suppress the others. For example, a backlash makes a new governance order more likely, and a governance order makes power concentration less likely.
-4. **Trajectory.** Each scenario's probability by the horizon is converted into a quarterly hazard rate and projected through 2028. The **tipping point** is the quarter where the median trajectory crosses 50%.
-
-The output is a likelihood and P10 to P90 band for each scenario, its trajectory, and the drivers behind it.
+Every run is logged in `reports/history.csv`, so you can see over time whether the answer holds or drifts.
 
 ## Run it
 
 ```bash
 pip install -r requirements.txt
-python model.py                 # fetch live signals, write report + dashboard data
-python model.py --offline       # no network, baseline values only
-python model.py --draws 100000  # bigger ensemble
+python data.py      # fetch fresh data (needs internet)
+python model.py     # analyze and write docs/forecast.json and reports/
+streamlit run app.py
 ```
 
-Override any signal with your own reading of the world:
+`python model.py --hypothesis 2028` tests a different year from the command line. In the Streamlit app, the sidebar slider does the same instantly.
 
-```bash
-echo '{"labor_displacement": 0.7, "policy_activity": 0.4}' > signals.json
-python model.py --signals signals.json
-```
+## Where it runs
 
-Each run writes `reports/YYYY-MM-DD.md`, updates `reports/history.csv`, and refreshes `docs/forecast.json`.
+- **Streamlit:** deploy this repo with main file `app.py`.
+- **GitHub Pages (optional):** `docs/index.html` shows the same dashboard from `docs/forecast.json`. Turn it on under Settings → Pages with branch `main` and folder `/docs`.
+- **GitHub Actions:** `forecast.yml` refreshes the data and refits the model every Monday. `refresh-data.yml` refreshes data on demand. `check.yml` runs the model on every push and pull request.
 
-## Automation
+## Limits
 
-- `.github/workflows/forecast.yml` runs the model every Monday and commits the new forecast, which updates the dashboard. You can also start it by hand from the Actions tab.
-- `.github/workflows/check.yml` runs the model on every pull request.
-
-## Roadmap
-
-1. Live feeds for the remaining signals (news volume, legislation trackers, job postings, compute spend).
-2. Time-series foundation models (such as Chronos or TimesFM) to forecast each signal forward, not just read its current value.
-3. A "Propose a scenario" issue template. The Action would score each new scenario and reply with its forecast.
-4. Calibration: score past forecasts against what actually happened.
+- Wikipedia attention can spike for reasons that have nothing to do with structural change, such as a news event or a viral moment.
+- An S-curve is one shape of change. A shift that comes in several waves will show the first wave clearly and the next one only once it starts.
+- OpenAlex files many papers that only carry a year under January, so research volume is analyzed as a 12-month total, and the latest 9 months are left out while they are still being indexed.
