@@ -1,0 +1,391 @@
+{
+  "generated": "2026-10-11",
+  "horizon": "2027-12-31",
+  "draws": 20000,
+  "shift_proximity_index": {
+    "value": 61.4,
+    "p10": 56.0,
+    "p90": 66.9
+  },
+  "quarters": [
+    "2026-Q4",
+    "2027-Q1",
+    "2027-Q2",
+    "2027-Q3",
+    "2027-Q4",
+    "2028-Q1",
+    "2028-Q2",
+    "2028-Q3",
+    "2028-Q4"
+  ],
+  "scenarios": [
+    {
+      "id": "power_concentration",
+      "name": "Concentration of power",
+      "description": "A few AI labs and states pull far ahead, becoming the de facto new system of economic and geopolitical power.",
+      "probability": 0.6930743149063184,
+      "p10": 0.5445646622863096,
+      "p90": 0.8286715669846214,
+      "tipping_point": "2027-Q2",
+      "drivers": [
+        {
+          "signal": "Compute and data-center investment",
+          "push": 0.718
+        },
+        {
+          "signal": "Concentration of AI power",
+          "push": 0.597
+        },
+        {
+          "signal": "Frontier capability jumps",
+          "push": 0.363
+        }
+      ],
+      "trajectory": {
+        "p10": [
+          0.1456,
+          0.2699,
+          0.3762,
+          0.467,
+          0.5446,
+          0.6109,
+          0.6675,
+          0.7159,
+          0.7572
+        ],
+        "p50": [
+          0.2157,
+          0.3849,
+          0.5176,
+          0.6216,
+          0.7033,
+          0.7673,
+          0.8175,
+          0.8568,
+          0.8877
+        ],
+        "p90": [
+          0.2973,
+          0.5062,
+          0.653,
+          0.7562,
+          0.8287,
+          0.8796,
+          0.9154,
+          0.9406,
+          0.9582
+        ]
+      }
+    },
+    {
+      "id": "scientific_acceleration",
+      "name": "Scientific and economic acceleration",
+      "description": "AI-driven discovery (science, medicine, energy) sharply accelerates growth and becomes the dominant story of the shift.",
+      "probability": 0.5951544435488318,
+      "p10": 0.4444766955289285,
+      "p90": 0.7383185255657112,
+      "tipping_point": "2027-Q3",
+      "drivers": [
+        {
+          "signal": "Frontier capability jumps",
+          "push": 0.484
+        },
+        {
+          "signal": "Compute and data-center investment",
+          "push": 0.449
+        },
+        {
+          "signal": "AI research velocity",
+          "push": 0.301
+        }
+      ],
+      "trajectory": {
+        "p10": [
+          0.1109,
+          0.2095,
+          0.2972,
+          0.3752,
+          0.4445,
+          0.5061,
+          0.5609,
+          0.6096,
+          0.6529
+        ],
+        "p50": [
+          0.1672,
+          0.3065,
+          0.4225,
+          0.5191,
+          0.5995,
+          0.6665,
+          0.7222,
+          0.7687,
+          0.8074
+        ],
+        "p90": [
+          0.2352,
+          0.4151,
+          0.5526,
+          0.6578,
+          0.7383,
+          0.7999,
+          0.8469,
+          0.8829,
+          0.9105
+        ]
+      }
+    },
+    {
+      "id": "governance_order",
+      "name": "New AI governance order",
+      "description": "Binding international AI rules, licensing of frontier models, or a new global institution for AI oversight is established.",
+      "probability": 0.4185383647408635,
+      "p10": 0.2632064238229537,
+      "p90": 0.5837950232390318,
+      "tipping_point": "2028-Q2",
+      "drivers": [
+        {
+          "signal": "Frontier capability jumps",
+          "push": 0.303
+        },
+        {
+          "signal": "Public concern about AI",
+          "push": 0.21
+        },
+        {
+          "signal": "Concentration of AI power",
+          "push": 0.179
+        }
+      ],
+      "trajectory": {
+        "p10": [
+          0.0593,
+          0.115,
+          0.1675,
+          0.2168,
+          0.2632,
+          0.3069,
+          0.3479,
+          0.3866,
+          0.4229
+        ],
+        "p50": [
+          0.101,
+          0.1919,
+          0.2735,
+          0.3469,
+          0.4129,
+          0.4722,
+          0.5255,
+          0.5735,
+          0.6165
+        ],
+        "p90": [
+          0.1608,
+          0.2958,
+          0.409,
+          0.504,
+          0.5838,
+          0.6507,
+          0.7069,
+          0.754,
+          0.7936
+        ]
+      }
+    },
+    {
+      "id": "labor_transformation",
+      "name": "Labor and income transformation",
+      "description": "AI automates a large share of knowledge work, forcing new income systems (UBI pilots at national scale, shorter work weeks, AI dividends).",
+      "probability": 0.41161279267533846,
+      "p10": 0.23270857429764435,
+      "p90": 0.5991237569794504,
+      "tipping_point": "2028-Q2",
+      "drivers": [
+        {
+          "signal": "Frontier capability jumps",
+          "push": 0.484
+        },
+        {
+          "signal": "AI-driven labor displacement",
+          "push": -0.299
+        },
+        {
+          "signal": "AI research velocity",
+          "push": 0.12
+        }
+      ],
+      "trajectory": {
+        "p10": [
+          0.0516,
+          0.1005,
+          0.1469,
+          0.191,
+          0.2327,
+          0.2723,
+          0.3098,
+          0.3455,
+          0.3792
+        ],
+        "p50": [
+          0.0984,
+          0.1871,
+          0.2671,
+          0.3392,
+          0.4042,
+          0.4628,
+          0.5157,
+          0.5633,
+          0.6063
+        ],
+        "p90": [
+          0.1671,
+          0.3062,
+          0.4222,
+          0.5187,
+          0.5991,
+          0.6661,
+          0.7219,
+          0.7684,
+          0.8071
+        ]
+      }
+    },
+    {
+      "id": "backlash_slowdown",
+      "name": "Backlash and slowdown",
+      "description": "Public backlash, incidents, or an investment pullback stall AI deployment and the expected shift is delayed past 2027.",
+      "probability": 0.13516846797034296,
+      "p10": 0.06902540750176121,
+      "p90": 0.21432678137188235,
+      "tipping_point": null,
+      "drivers": [
+        {
+          "signal": "Compute and data-center investment",
+          "push": -0.539
+        },
+        {
+          "signal": "Frontier capability jumps",
+          "push": -0.302
+        },
+        {
+          "signal": "Public concern about AI",
+          "push": 0.298
+        }
+      ],
+      "trajectory": {
+        "p10": [
+          0.0142,
+          0.0282,
+          0.042,
+          0.0556,
+          0.069,
+          0.0822,
+          0.0953,
+          0.1081,
+          0.1208
+        ],
+        "p50": [
+          0.0262,
+          0.0517,
+          0.0766,
+          0.1008,
+          0.1243,
+          0.1473,
+          0.1696,
+          0.1914,
+          0.2126
+        ],
+        "p90": [
+          0.0471,
+          0.092,
+          0.1347,
+          0.1755,
+          0.2143,
+          0.2513,
+          0.2866,
+          0.3202,
+          0.3522
+        ]
+      }
+    }
+  ],
+  "signals": [
+    {
+      "id": "research_velocity",
+      "name": "AI research velocity",
+      "value": 0.6,
+      "spread": 0.08,
+      "source": "baseline"
+    },
+    {
+      "id": "capability_jumps",
+      "name": "Frontier capability jumps",
+      "value": 0.7,
+      "spread": 0.12,
+      "source": "baseline"
+    },
+    {
+      "id": "compute_investment",
+      "name": "Compute and data-center investment",
+      "value": 0.8,
+      "spread": 0.08,
+      "source": "baseline"
+    },
+    {
+      "id": "labor_displacement",
+      "name": "AI-driven labor displacement",
+      "value": 0.4,
+      "spread": 0.15,
+      "source": "baseline"
+    },
+    {
+      "id": "policy_activity",
+      "name": "AI legislation and regulation",
+      "value": 0.5,
+      "spread": 0.12,
+      "source": "baseline"
+    },
+    {
+      "id": "market_concentration",
+      "name": "Concentration of AI power",
+      "value": 0.7,
+      "spread": 0.1,
+      "source": "baseline"
+    },
+    {
+      "id": "public_concern",
+      "name": "Public concern about AI",
+      "value": 0.6,
+      "spread": 0.12,
+      "source": "baseline"
+    }
+  ],
+  "history": [
+    {
+      "date": "2026-10-11",
+      "scenario": "power_concentration",
+      "probability": "0.6931"
+    },
+    {
+      "date": "2026-10-11",
+      "scenario": "scientific_acceleration",
+      "probability": "0.5952"
+    },
+    {
+      "date": "2026-10-11",
+      "scenario": "governance_order",
+      "probability": "0.4185"
+    },
+    {
+      "date": "2026-10-11",
+      "scenario": "labor_transformation",
+      "probability": "0.4116"
+    },
+    {
+      "date": "2026-10-11",
+      "scenario": "backlash_slowdown",
+      "probability": "0.1352"
+    }
+  ]
+}
