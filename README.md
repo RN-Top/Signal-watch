@@ -16,11 +16,15 @@ The premise: something large is starting to move, and AI is at the center of it.
 
 To turn it on: go to **Settings → Pages**, choose "Deploy from a branch", set the branch to `main` and the folder to `/docs`.
 
-To view it locally:
+### Streamlit app
+
+`app.py` is a Streamlit app that runs the forecast live and shows the same dashboard, with sliders for every signal so you can explore "what if" readings.
 
 ```bash
-python -m http.server -d docs 8000   # then open http://localhost:8000
+streamlit run app.py
 ```
+
+On Streamlit Community Cloud, point the app at this repo, branch `main`, main file `app.py`.
 
 ## Scenarios
 
@@ -59,16 +63,16 @@ The output is a likelihood and P10 to P90 band for each scenario, its trajectory
 
 ```bash
 pip install -r requirements.txt
-python app.py                 # fetch live signals, write report + dashboard data
-python app.py --offline       # no network, baseline values only
-python app.py --draws 100000  # bigger ensemble
+python model.py                 # fetch live signals, write report + dashboard data
+python model.py --offline       # no network, baseline values only
+python model.py --draws 100000  # bigger ensemble
 ```
 
 Override any signal with your own reading of the world:
 
 ```bash
 echo '{"labor_displacement": 0.7, "policy_activity": 0.4}' > signals.json
-python app.py --signals signals.json
+python model.py --signals signals.json
 ```
 
 Each run writes `reports/YYYY-MM-DD.md`, updates `reports/history.csv`, and refreshes `docs/forecast.json`.
