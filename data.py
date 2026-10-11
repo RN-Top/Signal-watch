@@ -7,18 +7,17 @@ uses can be inspected.
 
 Usage:
     python data.py            # refresh every series
-    python data.py arxiv_ai   # refresh one series
+    python data.py wiki_ai    # refresh one series
 """
 
 from __future__ import annotations
 
 import csv
 import io
-import re
 import sys
 import time
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import requests
@@ -59,9 +58,9 @@ def _fred(series: str) -> str:
 
 
 INDICATORS: list[Indicator] = [
-    Indicator("arxiv_ai", "AI papers on arXiv per month", "capability", "adoption", "arXiv",
-              "https://arxiv.org/list/cs.AI/recent",
-              note="New submissions in cs.AI, cs.LG and cs.CL."),
+    Indicator("openalex_ai", "AI research papers per month", "capability", "adoption", "OpenAlex",
+              "https://openalex.org/C154945302",
+              note="Works tagged Artificial intelligence. The latest 4 months are left out because indexing lags."),
     Indicator("wiki_llm", "Interest in large language models", "capability", "adoption", "Wikipedia pageviews",
               _wiki("Large_language_model")),
     Indicator("wiki_ai", "Interest in artificial intelligence", "attention", "adoption", "Wikipedia pageviews",
@@ -132,11 +131,16 @@ def _last_complete_month() -> date:
 # Fetchers
 # ---------------------------------------------------------------------------
 
+def _month_end(month: date) -> date:
+    return date(month.year + month.month // 12, month.month % 12 + 1, 1) - timedelta(days=1)
+
+
 def fetch_wikipedia(article: str) -> list[tuple[date, float]]:
-    end = _last_complete_month()
+    # The end date must be the month's last day, or the API returns only part of that month.
+    end = _month_end(_last_complete_month())
     url = (
         "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/"
-        f"{article}/monthly/{START:%Y%m%d}00/{end:%Y%m}0100"
+        f"{article}/monthly/{START:%Y%m%d}00/{end:%Y%m%d}00"
     )
     resp = requests.get(url, headers=HEADERS, timeout=30)
     resp.raise_for_status()
@@ -166,47 +170,29 @@ def fetch_fred(series: str) -> list[tuple[date, float]]:
     return out
 
 
-ARXIV_TIME_BUDGET = 12 * 60  # seconds per run; unfinished months are picked up next run
-
-
-def fetch_arxiv(existing: list[tuple[date, float]]) -> list[tuple[date, float]]:
-    """Monthly AI submissions. Only months not already cached (plus the last two) are fetched,
-    newest first, and progress is saved as it goes, so a slow run still makes headway."""
-    have = {d for d, _ in existing}
+def fetch_openalex(concept: str) -> list[tuple[date, float]]:
+    """Monthly count of works tagged with an OpenAlex concept."""
     end = _last_complete_month()
-    months = _months(START, end)
-    todo = [m for m in reversed(months) if m not in have or m >= months[-2]]
-    rows = dict(existing)
-    deadline = time.monotonic() + ARXIV_TIME_BUDGET
-    for n, m in enumerate(todo):
-        if time.monotonic() > deadline:
-            print(f"      arxiv_ai: time budget reached, {len(todo) - n} months left for the next run")
-            break
-        nxt = date(m.year + m.month // 12, m.month % 12 + 1, 1)
-        query = (f"(cat:cs.AI OR cat:cs.LG OR cat:cs.CL) AND "
-                 f"submittedDate:[{m:%Y%m%d}0000 TO {nxt:%Y%m%d}0000]")
-        for attempt in range(2):
-            try:
-                resp = requests.get("https://export.arxiv.org/api/query",
-                                    params={"search_query": query, "max_results": 0},
-                                    headers=HEADERS, timeout=20)
-                resp.raise_for_status()
-                total = re.search(r"<opensearch:totalResults[^>]*>(\d+)<", resp.text)
-                if total and int(total.group(1)) > 0:
-                    rows[m] = float(total.group(1))
-                break
-            except requests.RequestException:
-                time.sleep(5)
-        if n % 12 == 11:
-            save("arxiv_ai", sorted(rows.items()))
-        time.sleep(3)  # arXiv asks for at most one request every three seconds
-    return sorted(rows.items())
+    months = _months(START, end)[:-4]  # recent months are still being indexed
+    rows = []
+    for m in months:
+        resp = requests.get(
+            "https://api.openalex.org/works",
+            params={"filter": f"concepts.id:{concept},from_publication_date:{m.isoformat()},"
+                              f"to_publication_date:{_month_end(m).isoformat()}",
+                    "per-page": 1, "mailto": "signal-watch@users.noreply.github.com"},
+            headers=HEADERS, timeout=30,
+        )
+        resp.raise_for_status()
+        rows.append((m, float(resp.json()["meta"]["count"])))
+        time.sleep(0.2)
+    return rows
 
 
 def refresh(indicator_id: str) -> int:
     ind = BY_ID[indicator_id]
-    if ind.id == "arxiv_ai":
-        rows = fetch_arxiv(load(ind.id))
+    if ind.source == "OpenAlex":
+        rows = fetch_openalex(ind.url.rsplit("/", 1)[1])
     elif ind.source.startswith("Wikipedia"):
         rows = fetch_wikipedia(ind.url.rsplit("/", 1)[1])
     else:
@@ -217,8 +203,7 @@ def refresh(indicator_id: str) -> int:
 
 
 def main() -> None:
-    # arXiv is slow, so it goes last and can't hold up the other sources.
-    ids = sys.argv[1:] or sorted((i.id for i in INDICATORS), key=lambda i: i == "arxiv_ai")
+    ids = sys.argv[1:] or [i.id for i in INDICATORS]
     failed = []
     for indicator_id in ids:
         try:
