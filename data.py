@@ -166,29 +166,39 @@ def fetch_fred(series: str) -> list[tuple[date, float]]:
     return out
 
 
+ARXIV_TIME_BUDGET = 12 * 60  # seconds per run; unfinished months are picked up next run
+
+
 def fetch_arxiv(existing: list[tuple[date, float]]) -> list[tuple[date, float]]:
-    """Monthly AI submissions. Only months not already cached (plus the last two) are fetched."""
+    """Monthly AI submissions. Only months not already cached (plus the last two) are fetched,
+    newest first, and progress is saved as it goes, so a slow run still makes headway."""
     have = {d for d, _ in existing}
     end = _last_complete_month()
     months = _months(START, end)
-    todo = [m for m in months if m not in have or m >= months[-2]]
+    todo = [m for m in reversed(months) if m not in have or m >= months[-2]]
     rows = dict(existing)
-    for m in todo:
+    deadline = time.monotonic() + ARXIV_TIME_BUDGET
+    for n, m in enumerate(todo):
+        if time.monotonic() > deadline:
+            print(f"      arxiv_ai: time budget reached, {len(todo) - n} months left for the next run")
+            break
         nxt = date(m.year + m.month // 12, m.month % 12 + 1, 1)
         query = (f"(cat:cs.AI OR cat:cs.LG OR cat:cs.CL) AND "
                  f"submittedDate:[{m:%Y%m%d}0000 TO {nxt:%Y%m%d}0000]")
-        for attempt in range(3):
+        for attempt in range(2):
             try:
                 resp = requests.get("https://export.arxiv.org/api/query",
                                     params={"search_query": query, "max_results": 0},
-                                    headers=HEADERS, timeout=60)
+                                    headers=HEADERS, timeout=20)
                 resp.raise_for_status()
                 total = re.search(r"<opensearch:totalResults[^>]*>(\d+)<", resp.text)
-                if total:
+                if total and int(total.group(1)) > 0:
                     rows[m] = float(total.group(1))
                 break
             except requests.RequestException:
-                time.sleep(10 * (attempt + 1))
+                time.sleep(5)
+        if n % 12 == 11:
+            save("arxiv_ai", sorted(rows.items()))
         time.sleep(3)  # arXiv asks for at most one request every three seconds
     return sorted(rows.items())
 
@@ -207,15 +217,16 @@ def refresh(indicator_id: str) -> int:
 
 
 def main() -> None:
-    ids = sys.argv[1:] or [i.id for i in INDICATORS]
+    # arXiv is slow, so it goes last and can't hold up the other sources.
+    ids = sys.argv[1:] or sorted((i.id for i in INDICATORS), key=lambda i: i == "arxiv_ai")
     failed = []
     for indicator_id in ids:
         try:
             n = refresh(indicator_id)
-            print(f"ok    {indicator_id}: {n} months")
+            print(f"ok    {indicator_id}: {n} months", flush=True)
         except Exception as exc:  # keep the cached copy if a source is down
             failed.append(indicator_id)
-            print(f"FAIL  {indicator_id}: {exc}")
+            print(f"FAIL  {indicator_id}: {exc}", flush=True)
     if failed and len(failed) == len(ids):
         sys.exit(1)
 
